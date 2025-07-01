@@ -1,19 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Chat } from '@/components/ui/chat';
-import { type Message } from '@/components/ui/chat-message';
+import { type Message as UIMessage } from '@/components/ui/chat-message';
+import { type Message } from '@/lib/types';
+import { useChatContext } from '@/contexts/ChatContext';
 
-export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([
+interface ChatInterfaceProps {
+  chatId?: string;
+}
+
+export default function ChatInterface({ chatId }: ChatInterfaceProps) {
+  const { currentChat, selectChat, createChat, addMessage } = useChatContext();
+  const [input, setInput] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const router = useRouter();
+
+  // Load chat when chatId changes
+  useEffect(() => {
+    if (chatId && chatId !== currentChat?.id) {
+      selectChat(chatId);
+    }
+  }, [chatId, currentChat?.id, selectChat]);
+
+  // Convert messages to UI format
+  const messages: UIMessage[] = (currentChat?.messages || [
     {
       id: '1',
       role: 'assistant',
       content: "Hi! I'm your AI assistant. I can help you with files, system tasks, web searches, and more. What would you like me to help you with?",
+      createdAt: new Date(),
     }
-  ]);
-  const [input, setInput] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  ]).map(msg => ({
+    id: msg.id,
+    role: msg.role,
+    content: msg.content,
+    createdAt: msg.createdAt || msg.timestamp,
+    toolInvocations: msg.toolCalls?.map(tc => ({
+      state: 'result' as const,
+      toolName: tc.name,
+      result: { output: tc.output, error: tc.error }
+    }))
+  }));
 
   const handleSubmit = async (event?: { preventDefault?: () => void }) => {
     event?.preventDefault?.();
@@ -24,9 +53,27 @@ export default function ChatInterface() {
       id: crypto.randomUUID(),
       role: 'user',
       content: input.trim(),
+      createdAt: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    let currentChatId = currentChat?.id;
+
+    // If no current chat, create one first
+    if (!currentChatId) {
+      const newChat = await createChat(input.trim());
+      if (!newChat) {
+        return; // Failed to create chat
+      }
+      currentChatId = newChat.id;
+      router.push(`/chat/${newChat.id}`);
+    }
+
+    // Add user message to current chat
+    await addMessage({
+      role: userMessage.role,
+      content: userMessage.content,
+      toolCalls: userMessage.toolCalls,
+    });
     setInput('');
     setIsGenerating(true);
 
@@ -51,20 +98,17 @@ export default function ChatInterface() {
         throw new Error(data.error);
       }
 
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
+      // Add assistant message to current chat
+      await addMessage({
         role: 'assistant',
         content: data.message.content,
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
+        toolCalls: data.message.toolCalls,
+      });
     } catch (error: unknown) {
-      const errorMessage: Message = {
-        id: crypto.randomUUID(),
+      await addMessage({
         role: 'assistant',
         content: `Error: ${(error as Error).message}. Please make sure your ANTHROPIC_API_KEY is set in the .env.local file.`,
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      });
     } finally {
       setIsGenerating(false);
     }

@@ -2,7 +2,40 @@ export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
+  timestamp?: Date;
+  createdAt?: Date;
+  toolCalls?: ToolCall[];
+  toolInvocations?: ToolCall[]; // For compatibility with existing UI
+  chatId?: string;
+}
+
+export interface Chat {
+  id: string;
+  userId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  preview?: string;
+  messageCount: number;
+}
+
+export interface ChatWithMessages extends Chat {
+  messages: Message[];
+}
+
+export interface CreateChatRequest {
+  title?: string;
+  firstMessage?: string;
+}
+
+export interface UpdateChatRequest {
+  title?: string;
+  preview?: string;
+}
+
+export interface MessageInput {
+  role: 'user' | 'assistant';
+  content: string;
   toolCalls?: ToolCall[];
 }
 

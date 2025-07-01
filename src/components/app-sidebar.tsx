@@ -4,8 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  MessageSquare,
-  History,
   Settings,
   Wrench,
   RotateCcw,
@@ -25,19 +23,10 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { ModeToggle } from "./mode-toggle"
+import { ChatList } from "./ChatList"
 
 // Navigation items
 const items = [
-  {
-    title: "Chat",
-    url: "/",
-    icon: MessageSquare,
-  },
-  {
-    title: "History",
-    url: "/history",
-    icon: History,
-  },
   {
     title: "Tools",
     url: "/tools",
@@ -59,22 +48,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <div className="flex items-center gap-2">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gray-500 text-white">
-                  <RotateCcw className="size-4" />
+              <Link href="/">
+                <div className="flex items-center gap-2">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gray-500 text-white">
+                    <RotateCcw className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">Loop Agent</span>
+                    <span className="truncate text-xs text-sidebar-muted-foreground">
+                      Personal Tool Calling Agent
+                    </span>
+                  </div>
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Loop Agent</span>
-                  <span className="truncate text-xs text-sidebar-muted-foreground">
-                    Personal Tool Calling Agent
-                  </span>
-                </div>
-              </div>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Chats</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <ChatList />
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>

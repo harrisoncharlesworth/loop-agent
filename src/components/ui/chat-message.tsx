@@ -161,10 +161,18 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const isUser = role === "user"
 
-  const formattedTime = createdAt?.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })
+  const { formattedTime, isoString } = useMemo(() => {
+    if (!createdAt) return { formattedTime: undefined, isoString: undefined }
+    // Use consistent date parsing for server/client rendering
+    const date = typeof createdAt === 'string' ? new Date(createdAt) : createdAt
+    return {
+      formattedTime: date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      isoString: date.toISOString()
+    }
+  }, [createdAt])
 
   if (isUser) {
     return (
@@ -185,7 +193,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
         {showTimeStamp && createdAt ? (
           <time
-            dateTime={createdAt.toISOString()}
+            dateTime={isoString}
             className={cn(
               "mt-1 block px-1 text-xs opacity-50",
               animation !== "none" && "duration-500 animate-in fade-in-0"
@@ -220,7 +228,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
             {showTimeStamp && createdAt ? (
               <time
-                dateTime={createdAt.toISOString()}
+                dateTime={isoString}
                 className={cn(
                   "mt-1 block px-1 text-xs opacity-50",
                   animation !== "none" && "duration-500 animate-in fade-in-0"
@@ -262,7 +270,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
       {showTimeStamp && createdAt ? (
         <time
-          dateTime={createdAt.toISOString()}
+          dateTime={isoString}
           className={cn(
             "mt-1 block px-1 text-xs opacity-50",
             animation !== "none" && "duration-500 animate-in fade-in-0"
