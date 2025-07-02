@@ -7,8 +7,6 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
-const SYSTEM_PROMPT = `You are a helpful AI assistant. Be direct, concise, and natural in your responses. Don't ask for clarification unless truly necessary. If someone says "hi say hello ack", just respond with "hello ack". Use tools when needed but don't mention them unless relevant. Act like a smart, capable assistant that gets things done efficiently.`;
-
 export async function POST(request: NextRequest) {
   try {
     const { messages }: { messages: Message[] } = await request.json();
@@ -36,7 +34,6 @@ export async function POST(request: NextRequest) {
     const response = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4000,
-      system: SYSTEM_PROMPT,
       messages: anthropicMessages,
       tools: tools
     });
@@ -95,7 +92,6 @@ export async function POST(request: NextRequest) {
         const followUpResponse = await anthropic.messages.create({
           model: 'claude-3-5-sonnet-20241022',
           max_tokens: 4000,
-          system: SYSTEM_PROMPT,
           messages: [
             ...anthropicMessages,
             {

@@ -143,59 +143,8 @@ export const webSearchTool: Tool = {
     required: ['query']
   },
   handler: async (input: Record<string, unknown>) => {
-    try {
-      const query = encodeURIComponent(input.query as string);
-      
-      // Try SerpAPI first if available
-      if (process.env.SERPAPI_KEY) {
-        const response = await fetch(`https://serpapi.com/search.json?q=${query}&api_key=${process.env.SERPAPI_KEY}`);
-        if (response.ok) {
-          const data = await response.json();
-          const results = data.organic_results?.slice(0, 5)?.map((result: { title: string; snippet: string; link: string }) => 
-            `${result.title}\n${result.snippet}\n${result.link}\n`
-          ).join('\n') || 'No results found';
-          return `Search results for "${input.query}":\n${results}`;
-        }
-      }
-      
-      // Fallback to Tavily search API
-      const tavilyResponse = await fetch('https://api.tavily.com/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          api_key: process.env.TAVILY_API_KEY || 'tvly-demo',
-          query: input.query as string,
-          search_depth: 'basic',
-          include_answer: true,
-          include_images: false,
-          include_raw_content: false,
-          max_results: 5
-        })
-      });
-
-      if (tavilyResponse.ok) {
-        const data = await tavilyResponse.json();
-        let results = '';
-        
-        if (data.answer) {
-          results += `Answer: ${data.answer}\n\n`;
-        }
-        
-        if (data.results && data.results.length > 0) {
-          results += data.results.map((result: { title: string; content: string; url: string }) => 
-            `${result.title}\n${result.content}\n${result.url}\n`
-          ).join('\n');
-        }
-        
-        return results || 'No results found';
-      }
-      
-      return `Search temporarily unavailable. Please search for "${input.query}" manually on Google, Bing, or DuckDuckGo.`;
-    } catch {
-      return `Search error. Please try searching for "${input.query}" manually on Google, Bing, or DuckDuckGo.`;
-    }
+    // For now, return a mock response - in a real implementation you'd integrate with a search API
+    return `Mock search results for: "${input.query}". In a real implementation, this would search the web and return relevant results.`;
   }
 };
 
@@ -219,7 +168,7 @@ export const systemInfoTool: Tool = {
   }
 };
 
-// Execute command tool
+// Execute command tool (be careful with this one!)
 export const executeCommandTool: Tool = {
   name: 'execute_command',
   description: 'Execute a shell command. Use with caution!',
